@@ -7,14 +7,41 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>My Todo List</h1>
-        <div class="input-section">
-            <input type="text" id="todoInput" placeholder="Add a new task...">
-            <button id="addBtn">Add</button>
-        </div>
-        <ul id="todoList"></ul>
+    <div class="container" role="main">
+        <header>
+            <h1>My Todo List</h1>
+        </header>
+
+        <form class="input-section" id="todoForm" aria-label="Add a new task">
+            <input
+                type="text"
+                id="todoInput"
+                placeholder="What needs to be done?"
+                autocomplete="off"
+                aria-label="Task description"
+            >
+            <button type="submit" id="addBtn" aria-label="Add task">Add</button>
+        </form>
+
+        <nav class="filters" aria-label="Filter tasks">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="active">Active</button>
+            <button class="filter-btn" data-filter="completed">Completed</button>
+        </nav>
+
+        <ul id="todoList" aria-label="Task list"></ul>
+
+        <p id="emptyState" class="empty-state" hidden>No tasks yet — add one above!</p>
+
+        <footer class="status-bar" id="statusBar" hidden>
+            <span id="taskCount"></span>
+            <button id="clearCompletedBtn" class="clear-btn" hidden>Clear completed</button>
+        </footer>
     </div>
+
+    <noscript>
+        <p style="text-align:center;margin-top:2rem;">This app requires JavaScript to run.</p>
+    </noscript>
     <script src="script.js"></script>
 </body>
 </html>

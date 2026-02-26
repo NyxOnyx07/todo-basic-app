@@ -1,0 +1,341 @@
+/* ── Reset & Base ─────────────────────────────────── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --clr-bg: #f0f2f5;
+    --clr-card: #ffffff;
+    --clr-primary: #4f6ef7;
+    --clr-primary-hover: #3b57d9;
+    --clr-text: #1e1e2f;
+    --clr-text-muted: #8b8fa3;
+    --clr-border: #e2e4ea;
+    --clr-danger: #e8453c;
+    --clr-danger-hover: #c7352e;
+    --clr-complete: #2ecc71;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --transition: 0.2s ease;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1rem;
+}
+
+/* ── Container ────────────────────────────────────── */
+.container {
+    width: 100%;
+    max-width: 540px;
+}
+
+header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    text-align: center;
+    letter-spacing: -0.02em;
+}
+
+/* ── Input Section ────────────────────────────────── */
+.input-section {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.input-section input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    border: 2px solid var(--clr-border);
+    border-radius: var(--radius);
+    background: var(--clr-card);
+    color: var(--clr-text);
+    transition: border-color var(--transition);
+    outline: none;
+}
+
+.input-section input:focus {
+    border-color: var(--clr-primary);
+}
+
+.input-section button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--clr-primary);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+}
+
+.input-section button:hover {
+    background: var(--clr-primary-hover);
+}
+
+.input-section button:active {
+    transform: scale(0.96);
+}
+
+/* ── Filters ──────────────────────────────────────── */
+.filters {
+    display: flex;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+}
+
+.filter-btn {
+    flex: 1;
+    padding: 0.45rem 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--clr-text-muted);
+    background: var(--clr-card);
+    border: 2px solid var(--clr-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.filter-btn:hover {
+    color: var(--clr-primary);
+    border-color: var(--clr-primary);
+}
+
+.filter-btn.active {
+    color: #fff;
+    background: var(--clr-primary);
+    border-color: var(--clr-primary);
+}
+
+/* ── Todo List ────────────────────────────────────── */
+#todoList {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--clr-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: opacity var(--transition), transform var(--transition);
+    animation: slideIn 0.25s ease forwards;
+}
+
+.todo-item.removing {
+    animation: slideOut 0.25s ease forwards;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+}
+
+/* ── Custom Checkbox ──────────────────────────────── */
+.todo-item .checkbox {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 2px solid var(--clr-border);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+}
+
+.todo-item .checkbox:hover {
+    border-color: var(--clr-complete);
+}
+
+.todo-item.completed .checkbox {
+    background: var(--clr-complete);
+    border-color: var(--clr-complete);
+}
+
+.todo-item.completed .checkbox::after {
+    content: "✓";
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ── Task Text ────────────────────────────────────── */
+.todo-item .task-text {
+    flex: 1;
+    font-size: 0.95rem;
+    word-break: break-word;
+    outline: none;
+    transition: color var(--transition);
+}
+
+.todo-item.completed .task-text {
+    text-decoration: line-through;
+    color: var(--clr-text-muted);
+}
+
+.todo-item .task-text[contenteditable="true"] {
+    background: #f7f8fc;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+}
+
+/* ── Delete Button ────────────────────────────────── */
+.todo-item .delete-btn {
+    background: none;
+    border: none;
+    color: var(--clr-text-muted);
+    font-size: 1.15rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--transition), color var(--transition);
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.todo-item:hover .delete-btn,
+.todo-item .delete-btn:focus-visible {
+    opacity: 1;
+}
+
+.todo-item .delete-btn:hover {
+    color: var(--clr-danger);
+}
+
+/* ── Drag Handle ──────────────────────────────────── */
+.todo-item .drag-handle {
+    cursor: grab;
+    color: var(--clr-text-muted);
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity var(--transition);
+    user-select: none;
+    padding-right: 0.25rem;
+}
+
+.todo-item:hover .drag-handle {
+    opacity: 0.5;
+}
+
+.todo-item.dragging {
+    opacity: 0.4;
+}
+
+.todo-item.drag-over {
+    border-top: 2px solid var(--clr-primary);
+}
+
+/* ── Empty State ──────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    color: var(--clr-text-muted);
+    padding: 2rem 0;
+    font-size: 0.95rem;
+}
+
+/* ── Status Bar ───────────────────────────────────── */
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding: 0.6rem 0;
+    border-top: 1px solid var(--clr-border);
+    font-size: 0.8rem;
+    color: var(--clr-text-muted);
+}
+
+.clear-btn {
+    background: none;
+    border: none;
+    color: var(--clr-danger);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--transition);
+}
+
+.clear-btn:hover {
+    color: var(--clr-danger-hover);
+}
+
+/* ── Focus-visible for keyboard navigation ────────── */
+:focus-visible {
+    outline: 2px solid var(--clr-primary);
+    outline-offset: 2px;
+}
+
+button:focus-visible {
+    outline: 2px solid var(--clr-primary);
+    outline-offset: 2px;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 480px) {
+    body {
+        padding: 1.5rem 0.75rem;
+    }
+
+    header h1 {
+        font-size: 1.4rem;
+    }
+
+    .input-section input {
+        font-size: 0.9rem;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .input-section button {
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .todo-item .drag-handle {
+        display: none;
+    }
+}
