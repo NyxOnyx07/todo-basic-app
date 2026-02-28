@@ -9,18 +9,36 @@
 </head>
 <body>
     <main class="container" role="main">
-        <h1>My Todo List</h1>
+        <div class="header">
+            <h1>My Todo List</h1>
+            <button id="darkModeToggle" aria-label="Toggle dark mode">🌙</button>
+        </div>
         <form class="input-section" onsubmit="return false;" aria-label="Add new task">
-            <label for="todoInput" class="sr-only">New task</label>
-            <input 
-                type="text" 
-                id="todoInput" 
-                placeholder="Add a new task..." 
-                aria-label="New task input"
-                maxlength="200"
-                autocomplete="off"
-            >
-            <button id="addBtn" type="submit" aria-label="Add task">Add</button>
+            <div class="input-group">
+                <label for="todoInput" class="sr-only">New task</label>
+                <input 
+                    type="text" 
+                    id="todoInput" 
+                    placeholder="Add a new task..." 
+                    aria-label="New task input"
+                    maxlength="200"
+                    autocomplete="off"
+                >
+                <div class="char-count" id="charCount">0/200</div>
+            </div>
+            <div class="input-options">
+                <select id="prioritySelect" aria-label="Priority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+                <input 
+                    type="date" 
+                    id="dueDateInput" 
+                    aria-label="Due date"
+                >
+                <button id="addBtn" type="submit" aria-label="Add task">Add</button>
+            </div>
         </form>
         <ul id="todoList" role="list" aria-label="Tasks list"></ul>
     </main>
