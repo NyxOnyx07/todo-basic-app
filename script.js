@@ -1,181 +1,233 @@
-// Todo App State
+// ─── State ────────────────────────────────────────────────────────────────────
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
 let currentFilter = 'all';
 
-// DOM Elements
-const todoInput = document.getElementById('todoInput');
-const addBtn = document.getElementById('addBtn');
-const todoList = document.getElementById('todoList');
+// ─── DOM ──────────────────────────────────────────────────────────────────────
+const todoInput         = document.getElementById('todoInput');
+const addBtn            = document.getElementById('addBtn');
+const todoList          = document.getElementById('todoList');
+const clearCompletedBtn = document.getElementById('clearCompleted');
+const themeToggleBtn    = document.getElementById('themeToggle');
+const progressBar       = document.getElementById('progressBar');
+const progressBarWrap   = document.querySelector('.progress-bar-wrap');
 
-// Initialize app
+// ─── Theme ────────────────────────────────────────────────────────────────────
+function initTheme() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggleBtn.textContent = theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+    localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    renderApp();
+    initTheme();
     setupEventListeners();
+    render();
 });
 
-// Setup Event Listeners
+// ─── Event Listeners ──────────────────────────────────────────────────────────
 function setupEventListeners() {
     addBtn.addEventListener('click', addTodo);
-    todoInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            addTodo();
-        }
+    todoInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addTodo();
+    });
+    clearCompletedBtn.addEventListener('click', clearCompleted);
+    themeToggleBtn.addEventListener('click', toggleTheme);
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => setFilter(btn.dataset.filter));
     });
 }
 
-// Add Todo
+// ─── Add ──────────────────────────────────────────────────────────────────────
 function addTodo() {
     const text = todoInput.value.trim();
-    
-    if (text === '') {
+
+    if (!text) {
+        todoInput.classList.add('shake');
+        todoInput.addEventListener('animationend', () => todoInput.classList.remove('shake'), { once: true });
         todoInput.focus();
         return;
     }
 
     const todo = {
-        id: Date.now(),
-        text: text,
+        id: crypto.randomUUID(),
+        text,
         completed: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
     };
 
     todos.unshift(todo);
-    saveTodos();
+    save();
     todoInput.value = '';
     todoInput.focus();
-    renderTodos();
+    render();
 }
 
-// Toggle Todo Completion
+// ─── Toggle ───────────────────────────────────────────────────────────────────
 function toggleTodo(id) {
-    todos = todos.map(todo => 
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    );
-    saveTodos();
-    renderTodos();
+    todos = todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+    save();
+    render();
 }
 
-// Delete Todo
+// ─── Delete ───────────────────────────────────────────────────────────────────
 function deleteTodo(id) {
-    todos = todos.filter(todo => todo.id !== id);
-    saveTodos();
-    renderTodos();
+    const item = todoList.querySelector(`[data-id="${id}"]`);
+    if (item) {
+        item.classList.add('deleting');
+        item.addEventListener('transitionend', () => {
+            todos = todos.filter(t => t.id !== id);
+            save();
+            render();
+        }, { once: true });
+    } else {
+        todos = todos.filter(t => t.id !== id);
+        save();
+        render();
+    }
 }
 
-// Clear Completed Todos
+// ─── Inline Edit ──────────────────────────────────────────────────────────────
+function startEdit(id, el) {
+    el.contentEditable = 'true';
+    el.focus();
+    // Move cursor to end
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    function commitEdit() {
+        el.contentEditable = 'false';
+        const newText = el.textContent.trim();
+        if (newText) {
+            todos = todos.map(t => t.id === id ? { ...t, text: newText } : t);
+            save();
+        }
+        render();
+    }
+
+    el.addEventListener('blur', commitEdit, { once: true });
+    el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            el.blur();
+        } else if (e.key === 'Escape') {
+            el.removeEventListener('blur', commitEdit);
+            el.contentEditable = 'false';
+            render();
+        }
+    });
+}
+
+// ─── Clear Completed ──────────────────────────────────────────────────────────
 function clearCompleted() {
-    todos = todos.filter(todo => !todo.completed);
-    saveTodos();
-    renderTodos();
+    todos = todos.filter(t => !t.completed);
+    save();
+    render();
 }
 
-// Set Filter
+// ─── Filter ───────────────────────────────────────────────────────────────────
 function setFilter(filter) {
     currentFilter = filter;
-    renderApp();
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    render();
 }
 
-// Get Filtered Todos
-function getFilteredTodos() {
-    switch (currentFilter) {
-        case 'active':
-            return todos.filter(todo => !todo.completed);
-        case 'completed':
-            return todos.filter(todo => todo.completed);
-        default:
-            return todos;
-    }
+function getFiltered() {
+    if (currentFilter === 'active')    return todos.filter(t => !t.completed);
+    if (currentFilter === 'completed') return todos.filter(t => t.completed);
+    return todos;
 }
 
-// Save to LocalStorage
-function saveTodos() {
-    localStorage.setItem('todos', JSON.stringify(todos));
-}
-
-// Render Complete App
-function renderApp() {
-    const container = document.querySelector('.container');
-    
-    // Check if filters exist, if not create them
-    if (!document.querySelector('.filters')) {
-        const filtersHTML = `
-            <div class="filters">
-                <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All</button>
-                <button class="filter-btn ${currentFilter === 'active' ? 'active' : ''}" onclick="setFilter('active')">Active</button>
-                <button class="filter-btn ${currentFilter === 'completed' ? 'active' : ''}" onclick="setFilter('completed')">Completed</button>
-            </div>
-            <div class="stats">
-                <span class="todo-count"></span>
-                <button class="clear-completed" onclick="clearCompleted()">Clear Completed</button>
-            </div>
-        `;
-        
-        const todoList = document.getElementById('todoList');
-        todoList.insertAdjacentHTML('beforebegin', filtersHTML);
-    } else {
-        // Update active filter button
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.textContent.toLowerCase() === currentFilter) {
-                btn.classList.add('active');
-            }
-        });
-    }
-    
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
     renderTodos();
     updateStats();
 }
 
-// Render Todos
 function renderTodos() {
-    const filteredTodos = getFilteredTodos();
-    
-    if (filteredTodos.length === 0) {
+    const filtered = getFiltered();
+
+    if (filtered.length === 0) {
+        const messages = {
+            all:       'No tasks yet. Add one above!',
+            active:    'No active tasks!',
+            completed: 'No completed tasks!',
+        };
         todoList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📝</div>
-                <div class="empty-state-text">
-                    ${currentFilter === 'all' ? 'No tasks yet. Add one above!' : 
-                      currentFilter === 'active' ? 'No active tasks!' : 
-                      'No completed tasks!'}
-                </div>
-            </div>
-        `;
+            <li class="empty-state" role="presentation">
+                <div class="empty-state-icon">&#x1F4DD;</div>
+                <div class="empty-state-text">${messages[currentFilter]}</div>
+            </li>`;
         return;
     }
 
-    todoList.innerHTML = filteredTodos.map(todo => `
+    todoList.innerHTML = filtered.map(todo => `
         <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
-            <input 
-                type="checkbox" 
-                class="todo-checkbox" 
+            <input
+                type="checkbox"
+                class="todo-checkbox"
                 ${todo.completed ? 'checked' : ''}
-                onchange="toggleTodo(${todo.id})"
+                aria-label="Mark '${escapeHtml(todo.text)}' as ${todo.completed ? 'incomplete' : 'complete'}"
+                onchange="toggleTodo('${todo.id}')"
             >
-            <span class="todo-text">${escapeHtml(todo.text)}</span>
-            <button class="delete-btn" onclick="deleteTodo(${todo.id})">Delete</button>
+            <span
+                class="todo-text"
+                title="Double-click to edit"
+                ondblclick="startEdit('${todo.id}', this)"
+            >${escapeHtml(todo.text)}</span>
+            <button
+                class="delete-btn"
+                aria-label="Delete task"
+                onclick="deleteTodo('${todo.id}')"
+            >&#x2715;</button>
         </li>
     `).join('');
 }
 
-// Update Stats
 function updateStats() {
-    const activeCount = todos.filter(todo => !todo.completed).length;
+    const total     = todos.length;
+    const completed = todos.filter(t => t.completed).length;
+    const active    = total - completed;
+
     const todoCountEl = document.querySelector('.todo-count');
-    
     if (todoCountEl) {
-        todoCountEl.textContent = `${activeCount} ${activeCount === 1 ? 'task' : 'tasks'} remaining`;
+        todoCountEl.textContent = `${active} ${active === 1 ? 'task' : 'tasks'} remaining`;
     }
-    
-    const clearBtn = document.querySelector('.clear-completed');
-    const completedCount = todos.filter(todo => todo.completed).length;
-    
+
+    const clearBtn = document.getElementById('clearCompleted');
     if (clearBtn) {
-        clearBtn.style.visibility = completedCount > 0 ? 'visible' : 'hidden';
+        clearBtn.style.visibility = completed > 0 ? 'visible' : 'hidden';
     }
+
+    // Progress bar
+    const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+    progressBar.style.width = `${pct}%`;
+    progressBarWrap.setAttribute('aria-valuenow', pct);
 }
 
-// Escape HTML to prevent XSS
+// ─── Persist ──────────────────────────────────────────────────────────────────
+function save() {
+    localStorage.setItem('todos', JSON.stringify(todos));
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
